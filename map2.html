@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Display a satellite map on a webpage</title>
+<meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
+<script type="text/javascript" src="qrc:///qtwebchannel/qwebchannel.js"></script>
+<link href="https://api.mapbox.com/mapbox-gl-js/v2.2.0/mapbox-gl.css" rel="stylesheet">
+<script src="https://api.mapbox.com/mapbox-gl-js/v2.2.0/mapbox-gl.js"></script>
+<script src='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-draw/v1.2.0/mapbox-gl-draw.js'></script>
+<style>
+body { margin: 0; padding: 0; }
+#map { position: absolute; top: 0; bottom: 0; width: 100%; }
+</style>
+
+<style>
+.marker {
+  background-image: url('4.png');
+ background-size: cover;
+  width: 50px;
+  height: 50px;
+  //border-radius: 50%;
+ // cursor: pointer;
+}
+</style>
+</head>
+<body>
+<div id="map"></div>
+<script>
+	mapboxgl.accessToken = 'pk.eyJ1Ijoic3VkaGFyMDAxIiwiYSI6ImNrbXlrcGVpajA0d3MydnBreGo3ZThtZDIifQ.OVquQB6JegFIPlBCb6FI-g';
+var map = new mapboxgl.Map({
+container: 'map', // container ID
+style: 'mapbox://styles/mapbox/satellite-v9', // style URL
+center:[ 78.686600,10.935954], // starting position [lng, lat]
+zoom: 17 // starting zoom
+});
+
+    var JSQtObject;
+    var onPoint;
+
+    new QWebChannel(qt.webChannelTransport, function (channel) {
+         
+            JSQtObject =  channel.objects.MainWindow
+
+           onPoint = JSQtObject.onPolyLine
+         
+        });
+
+    var draw = new MapboxDraw({
+        displayControlsDefault: false,
+        controls: {
+            line_string: true,
+            trash: true
+        },
+        defaultMode: 'draw_line_string'
+    });
+    map.addControl(draw,'top-left');
+
+
+
+
+var dat = {'type': 'Feature',
+        'properties': {},
+        'geometry': {
+        'type': 'LineString',
+            'coordinates': [
+                [ 78.686600,10.935954],
+                [ 78.686609,10.935959],
+   
+            ]
+        }
+        };
+
+var angle = 0;
+var el = document.createElement('div');
+el.className = 'marker';
+var truckMarker = new mapboxgl.Marker(el);
+len = dat.geometry.coordinates.length;
+truckMarker.setLngLat(dat.geometry.coordinates[len-1])
+truckMarker.addTo(map);
+
+map.on('load', function () {
+   map.addSource('route', {
+        'type': 'geojson',
+        'data': dat,
+        
+   });
+
+   map.addLayer({
+'id': 'route',
+'type': 'line',
+'source': 'route',
+'layout': {
+'line-join': 'round',
+'line-cap': 'round'
+},
+'paint': {
+'line-color': '#FF0000',
+'line-width': 1
+}
+});
+
+
+
+
+ var timer = window.setInterval(function () {
+       
+    map.getSource('route').setData(dat);
+
+
+    len = dat.geometry.coordinates.length;
+   // map.panTo(dat.geometry.coordinates[len-1]);
+
+
+       
+        var rotateString = "rotate(" + angle + "deg)";
+        
+        truckMarker.setLngLat(dat.geometry.coordinates[len-1])
+       truckMarker.setRotation(angle)
+     
+        //el.style.transform = el.style.transform + rotateString;
+
+
+    }, 10);
+
+
+    
+});
+
+
+    map.on('draw.create', updateArea);
+
+        function updateArea(e) {
+        var data = draw.getAll();
+        onPoint(data.features[0].geometry.coordinates);
+    }
+
+
+function clear(item, index) {
+ map.removeLayer(item);
+}
+   
+
+
+</script>
+
+
+ 
+</body>
+</html>
