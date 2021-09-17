@@ -7,7 +7,7 @@ from types import TracebackType
 from PyQt5 import QtCore, QtGui
 import qdarkstyle
 import math
-from SteeringTest import *
+
 import numpy as np
 
 from PyQt5.QtWidgets import (
@@ -32,9 +32,9 @@ from AttitudeWidget import AttitudeIndicator
 from CustomGraph import CustomGraph,randColor,genColorCode
 from STLViewerWidget import STLViewerWidget
 from CameraReceiver import CameraWidget
-from MapWidget import MapWidget
+
 from TCPProtocol import Protocol
-from Tracking import ProcessImage
+
 import pyqtgraph as pg
 
 from PyQt5.QtCore import Qt
@@ -148,18 +148,18 @@ class ConfigTab(QWidget):
        
 
         if self.config.has_option("LOCAL","adapter"):
-            print("adapter")
+            # print("adapter")
             adapter = self.config.get("LOCAL","adapter")
             self.networkSelectCB.setCurrentIndex(self.getNetworkAdapterIndex(adapter))
             
 
         if self.config.has_option("LOCAL","port"):
-            print("port")
+            # print("port")
             port = self.config.get("LOCAL","port")
             self.portLineEdit.setText(port)
         
         if self.config.has_option("NGROK","auth"):
-            print("auth")
+            # print("auth")
             auth =  self.config.get("NGROK","auth")
             self.authtokenEdit.setText(auth)
         
@@ -227,20 +227,20 @@ class ConfigTab(QWidget):
 
     def onUseLocalGB(self,toggle):
         if toggle:
-            print("Toggled Local")
+            # print("Toggled Local")
             self.gb2.setChecked(False)
         else:
-            print("UNToggled Local")
+            # print("UNToggled Local")
             self.gb2.setChecked(True)
             
     def onUseNgrokGB(self,toggle):
         if toggle:
-            print("Toggled Ngrok")
+            # print("Toggled Ngrok")
             self.gb.setChecked(False)
             if len(self.authtokenEdit.text())==0:
                 self.gotoDashBoardBtn.setEnabled(False)
         else:
-            print("UNToggled Ngrok")
+            # print("UNToggled Ngrok")
             self.gb.setChecked(True)
 
     def getNetworkAdapterIndex(self,val):
@@ -248,7 +248,6 @@ class ConfigTab(QWidget):
         for adapter in self.newtworkAdapters:
             if adapter.getAdapterName()==val:
                 return i
-            
             i = i + 1
             
 
@@ -720,8 +719,6 @@ class Dashboard(QWidget):
             self.cameraFeedBtn.setText("Stop Cam Feed")
             self.CAM_FEED_STARTED = True
             
-            
-
         elif self.protocol.isCamConnected() and self.protocol.isListening() and self.CAM_FEED_STARTED:
             self.protocol.changeCam.disconnect(self.cam.setImage)
             self.protocol.stopCamFeed()
@@ -729,9 +726,6 @@ class Dashboard(QWidget):
             self.cameraFeedBtn.setText("Start Cam Feed")
             self.CAM_FEED_STARTED = False
             
-        
-
-
     def onDepthFeedBtn(self):
         if not self.protocol.isDepthConnected() and self.protocol.isListening() and not self.DEPTH_FEED_STARTED:
             self.protocol.changeDepth.connect(self.depthCam.setImage)
@@ -746,7 +740,6 @@ class Dashboard(QWidget):
             self.depthFeedBtn.setText("Start Depth Feed")
             self.DEPTH_FEED_STARTED = False
         
-
     def sendRC(self):
         arr = []
         for motor in self.val.keys():
@@ -754,8 +747,6 @@ class Dashboard(QWidget):
             arr.append(WithinRange)
         print(arr)
         self.protocol.sendRCData(arr)
-
-
 
     def onRCBtn(self):
         
@@ -769,9 +760,6 @@ class Dashboard(QWidget):
             self.RC_ENABLED = False
             log.info("RC Disabled")
             
-
-
-    
     def updateStlRotation(self,x,y,z):
         self.stlViewer.setValues(x,y,z)
     
@@ -785,8 +773,7 @@ class Dashboard(QWidget):
         self.protocol = Protocol(self.onPacketReceive,parent=self)
         self.protocol.onStart.connect(self.onServerStart)
         self.protocol.initLocal(ip,port)
-        
-    
+            
     def initServerWithNgrok(self,auth):
         self.protocol = Protocol(self.onPacketReceive,parent=self)
         self.protocol.onStart.connect(self.onServerStart)
@@ -807,12 +794,7 @@ class Dashboard(QWidget):
             self.portEditText.setText("Port")
             self.connectBtn.setText("Start Server")
             
-    
-    
-
-    
     def startServer(self):
-
         self.protocol.sessionOpened()
         self.protocol.setTelemetryCallBack(self.onTelemetryData)
         self.protocol.onClientDisconnect.connect(self.handleDisconnect)
@@ -844,7 +826,9 @@ class Dashboard(QWidget):
             self.disableLeftSideBar(True)
             self.onTelemtryStop()
             self.TELEMETRY_STARTED=False
-            self.clientsListView.clear()
+            self.clientsListView.takeItem(self.clientsListView.row(self.clientListWidgets.get(ClientTypes.MAIN)))
+            self.clientsListView.takeItem(self.clientsListView.row(self.clientListWidgets.get(ClientTypes.CAM)))
+            self.clientsListView.takeItem(self.clientsListView.row(self.clientListWidgets.get(ClientTypes.DEPTH_CAM)))
         elif clientType == ClientTypes.CAM:
             self.cameraFeedBtn.setText("Start Cam Feed")
             self.CAM_FEED_STARTED = False
@@ -952,8 +936,6 @@ class Window(QMainWindow):
         self.tabwidget.addTab(self.configTab,'Config')
         self.tabwidget.addTab(self.dashboard,'Dashboard')
         # self.tabwidget.setTabEnabled(1,False)
-
-
         
         self.setCentralWidget(self.tabwidget)
         
@@ -970,8 +952,6 @@ class Window(QMainWindow):
         self.dashboard.initServerWithLocal(ip,port)
         self.tabwidget.setCurrentIndex(1)
 
-
-
     def closeEvent(self, event):
         reply = QMessageBox.question(self, 'Window Close', 'Are you sure you want to close the window?',
                 QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
@@ -984,14 +964,9 @@ class Window(QMainWindow):
             event.ignore()
 
 
-        
-
-
 if __name__ == "__main__":
     # create logger
     app = QApplication(sys.argv)
-
-
     # app.setStyleSheet(qdarkstyle.load_stylesheet())
     window = Window()
     window.show()

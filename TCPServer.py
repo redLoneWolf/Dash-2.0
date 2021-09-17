@@ -244,7 +244,7 @@ class Server(QObject):
         log.info("Written : {written}".format(written=written))
 
         if written != len(dataInBytes):
-            print ("BidirectionalCommunication error - message not sent")
+            log.info ("BidirectionalCommunication error - message not sent")
         client.flush()
 
     def checkClientConnection(self,clientType:ClientTypes):

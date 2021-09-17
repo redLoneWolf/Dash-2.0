@@ -6,8 +6,7 @@ import numpy as np
 from TCPServer import ClientTypes, Server
 import logging
 import sys
-from logging.handlers import RotatingFileHandler
-from logging import handlers
+
 log = logging.getLogger('hello')
 
 from PyQt5.QtCore import QObject, QPoint, QRect, QSize, QThread, Qt, pyqtSignal
@@ -69,18 +68,12 @@ class Protocol(Server):
     SIZE_SIZE  = 4
     COMMAND_SIZE = 1
     
-
     handshake = False
     changeCam = pyqtSignal(QImage)
     changeDepth = pyqtSignal(QImage)
 
-
-    
     def __init__(self,packetReceiveCallback,parent=None):
         super().__init__(self.onDataReceived,parent=parent)
-        
-
-
         log.info("Protocol Init")
 
         self.rxbuffer = b''
@@ -93,20 +86,14 @@ class Protocol(Server):
         self.gotCommand = False
         self.gotData = False
 
-       
-        
-
-    
     def isCamConnected(self):
         return self.checkClientConnection(ClientTypes.CAM)
     
     def isDepthConnected(self):
         return self.checkClientConnection(ClientTypes.DEPTH_CAM)
-        
-    
+            
     def setTelemetryCallBack(self,callback):
         self.telemetryCallback = callback
-
 
     def isHandShake(self):
         return self.handshake
@@ -150,7 +137,6 @@ class Protocol(Server):
             except ValueError as e:
                 self.currentCommand = Commands.COMMAND_NOT_FOUND
            
-
         if (self.gotCommand and len(self.rxbuffer) >= self.DATA_OFSET_POS + self.dataSize):
             # byteBuffer.position(3);
             # byte[] data = new byte[size];
@@ -192,13 +178,13 @@ class Protocol(Server):
     
     def checkSize(self):
         self.dataSize = np.frombuffer(self.rxbuffer, dtype=intDT,offset=self.SIZE_POS,count=1)[0]
-        print('size ',self.dataSize)
+        # print('size ',self.dataSize)
         return self.dataSize > 0
 
     
     def checkCommand(self):
         commandValue = np.frombuffer(self.rxbuffer, dtype=intDT8,offset=self.COMMAND_POS,count=1)[0]
-        print('comand ',commandValue)
+        # print('comand ',commandValue)
         try:
             self.currentCommand =  Commands(commandValue)
             
@@ -329,16 +315,12 @@ class Protocol(Server):
     def sendRCData(self,array):
         self.sendPacket(Commands.WRITE_MOTOR,self.IntToBytes(array))
 
-    
-
-
-
     def onCommand(self):
-        switcher = {
-                    Commands.TELEMETRY_DATA:self.onTelemetry
-                    }
+        switcher = {Commands.TELEMETRY_DATA:self.onTelemetry,}
         fun = switcher.get(self.currentCommand)
-        fun()
+        
+        if fun:
+            fun()
 
         
     
